@@ -3,8 +3,33 @@
   
     
     <entry>
+      <title><![CDATA[hexo调试日志]]></title>
+      <url>/2021/03/24/hexo%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/</url>
+      <content type="html"><![CDATA[<ol>
+<li>hexo d出错 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Error: Spawn failed at ChildProcess.&lt;anonymous&gt; (E:\blog\node_modules\hexo-</span><br><span class="line">util\lib\spawn.js:51:21) at ChildProcess.emit (events.js:210:5) at ChildProcess.cp.emit (E:\blog\node_modules\cross-</span><br><span class="line">spawn\lib\enoent.js:34:29) at Process.ChildProcess._handle.onexit (internal&#x2F;child_process.js:272:12)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>解决办法：</li>
+</ul>
+<ol>
+<li>删除.deploy_git文件</li>
+<li>依次执行<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dexo clean</span><br><span class="line">dexo g</span><br><span class="line">dexo d</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+</ol>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> hexo </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[调试日志]]></title>
-      <url>/2021/03/24/%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/</url>
+      <url>/2021/03/24/python%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/</url>
       <content type="html"><![CDATA[<hr>
 <ol>
 <li><p>如果函数def中没有return，只有print，如果再在引用时使用print，那么最后会有none输出。</p>
@@ -32,6 +57,12 @@
 </ol>
 ]]></content>
       
+        
+        <tags>
+            
+            <tag> python </tag>
+            
+        </tags>
         
     </entry>
     
