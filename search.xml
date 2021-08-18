@@ -5,7 +5,10 @@
     <entry>
       <title><![CDATA[NLP-transformer]]></title>
       <url>/2021/08/18/NLP-transformer/</url>
-      <content type="html"><![CDATA[<h2 id="图解Attention"><a href="#图解Attention" class="headerlink" title="图解Attention"></a>图解Attention</h2><p>Seq2seq：有2篇开创性的论文：<a href="https://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf">Sutskever等2014年发表的Sequence to Sequence Learning<br>with Neural Networks</a>和<a href="http://emnlp2014.org/papers/pdf/EMNLP2014179.pdf">Cho等2014年发表的Learning Phrase Representations using RNN Encoder–Decoder<br>for Statistical Machine Translation</a>都对这些模型进行了解释。</p>
+      <content type="html"><![CDATA[<ul>
+<li>DataWhale开源学习资料:<a href="https://github.com/datawhalechina/learn-nlp-with-transformers">https://github.com/datawhalechina/learn-nlp-with-transformers</a><h2 id="图解Attention"><a href="#图解Attention" class="headerlink" title="图解Attention"></a>图解Attention</h2></li>
+</ul>
+<p>Seq2seq：有2篇开创性的论文：<a href="https://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks.pdf">Sutskever等2014年发表的Sequence to Sequence Learning<br>with Neural Networks</a>和<a href="http://emnlp2014.org/papers/pdf/EMNLP2014179.pdf">Cho等2014年发表的Learning Phrase Representations using RNN Encoder–Decoder<br>for Statistical Machine Translation</a>都对这些模型进行了解释。</p>
 <p>编码器和解码器在Transformer出现之前一般采用的是循环神经网络。关于循环神经网络，建议阅读 <a href="https://www.youtube.com/watch?v=UNmqTiOnRfg">Luis Serrano写的一篇关于循环神经网络</a>的精彩介绍.</p>
 <p>如果你觉得你准备好了学习注意力机制的代码实现，一定要看看基于 TensorFlow 的 神经机器翻译 (seq2seq) <a href="https://github.com/tensorflow/nmt">指南</a>。</p>
 <h2 id="图解transformer"><a href="#图解transformer" class="headerlink" title="图解transformer"></a>图解transformer</h2><p>本文翻译自<a href="http://jalammar.github.io/illustrated-transformer">illustrated-transformer</a></p>
