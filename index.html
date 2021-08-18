@@ -145,6 +145,364 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/08/18/Task02%20%E6%B6%88%E6%81%AF%E4%BC%A0%E9%80%92%E5%9B%BE%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ming Qin">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/18/Task02%20%E6%B6%88%E6%81%AF%E4%BC%A0%E9%80%92%E5%9B%BE%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/" class="post-title-link" itemprop="url">Untitled</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-08-18 21:14:53" itemprop="dateCreated datePublished" datetime="2021-08-18T21:14:53+08:00">2021-08-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-06-19 22:12:48" itemprop="dateModified" datetime="2021-06-19T22:12:48+08:00">2021-06-19</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Task02-消息传递图神经网络"><a href="#Task02-消息传递图神经网络" class="headerlink" title="Task02 消息传递图神经网络"></a>Task02 消息传递图神经网络</h1><h2 id="笔记部分"><a href="#笔记部分" class="headerlink" title="笔记部分"></a>笔记部分</h2><ul>
+<li><p>消息传递范式</p>
+<ul>
+<li><p>用$\mathbf{x}^{(k-1)}<em>i\in\mathbb{R}^F$表示$(k-1)$层中节点$i$的节点特征，$\mathbf{e}</em>{j,i} \in \mathbb{R}^D$ 表示从节点$j$到节点$i$的边的特征，消息传递图神经网络可以描述为</p>
+</li>
+<li><p>$$<br>\mathbf{x}_i^{(k)} = \gamma^{(k)} \left( \mathbf{x}<em>i^{(k-1)}, \square</em>{j \in \mathcal{N}(i)} , \phi^{(k)}\left(\mathbf{x}_i^{(k-1)}, \mathbf{x}<em>j^{(k-1)},\mathbf{e}</em>{j,i}\right) \right),<br>$$</p>
+<p><img src="file://C:\Users\qinan\Desktop\team-study\team-learning-nlp\GNN\Markdown%E7%89%88%E6%9C%AC\images\image-20210516110407207.png?lastModify=1624111214" alt="节点嵌入（Node Embedding）"></p>
+<p>图片展示了<strong>基于消息传递范式的生成节点表征的过程</strong>：</p>
+<ol>
+<li>在图的最右侧，B节点的邻接节点（A,C）的信息传递给了B，经过信息变换得到了B的嵌入，C、D节点同。</li>
+<li>在图的中右侧，A节点的邻接节点（B,C,D）的之前得到的节点嵌入传递给了节点A；在图的中左侧，聚合得到的信息经过信息变换得到了A节点新的嵌入。</li>
+<li>重复多次，我们可以得到每一个节点的经过多次信息变换的嵌入。这样的经过多次信息聚合与变换的节点嵌入就可以作为节点的表征，可以用于节点的分类。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>继承<code>MessagePassing</code>类的<code>GCNConv</code></p>
+<ul>
+<li>GCNConv的数学定义为</li>
+</ul>
+<p>$$<br>\mathbf{x}<em>i^{(k)} = \sum</em>{j \in \mathcal{N}(i) \cup { i }} \frac{1}{\sqrt{\deg(i)} \cdot \sqrt{\deg(j)}} \cdot \left( \mathbf{\Theta} \cdot \mathbf{x}_j^{(k-1)} \right),<br>$$</p>
+<ul>
+<li><p>其中，相邻节点的特征首先通过权重矩阵$\mathbf{\Theta}$进行转换，然后按端点的度进行归一化处理，最后进行加总。</p>
+</li>
+<li><p>步骤细分：</p>
+</li>
+</ul>
+<ol>
+<li>向邻接矩阵添加自环边。</li>
+<li>线性转换节点特征矩阵。</li>
+<li>计算归一化系数。</li>
+<li>归一化$j$中的节点特征。</li>
+<li>将相邻节点特征相加（”求和 “聚合）。</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li><p>作业</p>
+<ul>
+<li><p>MessagePassing的运行流程：</p>
+<ul>
+<li>通过线性变换以及利用归一化系数将源节点往目标节点传递特征</li>
+<li>通过多种方式（max、average、sum）对特征进行聚合</li>
+<li>将聚合后的信息再次进行转换</li>
+</ul>
+</li>
+<li><p>继承<code>MessagePassing</code>类的规范,并请继承<code>MessagePassing</code>类来自定义几个的图神经网络类</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torch.nn <span class="keyword">import</span> functional <span class="keyword">as</span> F</span><br><span class="line"><span class="keyword">from</span> torch_geometric.nn <span class="keyword">import</span> MessagePassing</span><br><span class="line"><span class="keyword">from</span> torch_geometric.datasets <span class="keyword">import</span> Planetoid</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyGNN</span>(<span class="params">MessagePassing</span>):</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    .. math::</span></span><br><span class="line"><span class="string">        \mathbf&#123;x&#125;^&#123;\prime&#125;_i = \mathbf&#123;x&#125;_i \cdot \mathbf&#123;\Theta&#125;_1 +</span></span><br><span class="line"><span class="string">        \sum_&#123;j \in \mathcal&#123;N&#125;(i)&#125; e_&#123;j,i&#125; \cdot</span></span><br><span class="line"><span class="string">        (\mathbf&#123;\Theta&#125;_2 \mathbf&#123;x&#125;_i - \mathbf&#123;\Theta&#125;_3 \mathbf&#123;x&#125;_j)</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, in_channels, out_channels, device</span>):</span></span><br><span class="line">        <span class="built_in">super</span>(MyGNN, self).__init__(aggr=<span class="string">&#x27;add&#x27;</span>)</span><br><span class="line">        self.in_channels = in_channels</span><br><span class="line">        self.out_channels = out_channels</span><br><span class="line"></span><br><span class="line">        self.lin1 = torch.nn.Linear(in_channels, out_channels).to(device)</span><br><span class="line">        self.lin2 = torch.nn.Linear(in_channels, out_channels).to(device)</span><br><span class="line">        self.lin3 = torch.nn.Linear(in_channels, out_channels).to(device)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">forward</span>(<span class="params">self, x, edge_index</span>):</span></span><br><span class="line">        a = self.lin1(x)</span><br><span class="line">        b = self.lin2(x)</span><br><span class="line">        out = self.propagate(edge_index, a=a, b=b)</span><br><span class="line">        <span class="keyword">return</span> self.lin3(x) + out</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">message</span>(<span class="params">self, a_i, b_j</span>):</span></span><br><span class="line">        out = a_i - b_j</span><br><span class="line">        <span class="keyword">return</span> out</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__repr__</span>(<span class="params">self</span>):</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">&#x27;&#123;&#125;(&#123;&#125;, &#123;&#125;)&#x27;</span>.<span class="built_in">format</span>(self.__class__.__name__, self.in_channels,</span><br><span class="line">                                   self.out_channels)</span><br></pre></td></tr></table></figure></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">device = torch.device(<span class="string">&#x27;cuda:0&#x27;</span>)</span><br><span class="line"></span><br><span class="line">dataset = Planetoid(root=<span class="string">&#x27;dataset/Cora&#x27;</span>, name=<span class="string">&#x27;Cora&#x27;</span>)</span><br><span class="line">model = MyGNN(in_channels=dataset.num_features, out_channels=dataset.num_classes, device=device)</span><br><span class="line"><span class="built_in">print</span>(model)</span><br><span class="line"></span><br><span class="line">data = dataset[<span class="number">0</span>].to(device)</span><br><span class="line">optimizer = torch.optim.Adam(model.parameters(), lr=<span class="number">0.01</span>, weight_decay=<span class="number">5e-4</span>)</span><br><span class="line"></span><br><span class="line">model.train()</span><br><span class="line"><span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">200</span>):</span><br><span class="line">    optimizer.zero_grad()</span><br><span class="line">    out = model(data.x, data.edge_index).to(device)</span><br><span class="line">    pred = out.argmax(dim=<span class="number">1</span>)</span><br><span class="line">    accuracy = <span class="built_in">int</span>((pred[data.test_mask] == data.y[data.test_mask]).<span class="built_in">sum</span>()) / data.test_mask.<span class="built_in">sum</span>()</span><br><span class="line">    loss = F.nll_loss(out[data.train_mask], data.y[data.train_mask])</span><br><span class="line">    loss.backward()</span><br><span class="line">    optimizer.step()</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> epoch % <span class="number">10</span> == <span class="number">0</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;Train Epoch: &#123;:3&#125; Accuracy: &#123;:.2f&#125;%&quot;</span>.<span class="built_in">format</span>(epoch, accuracy.item() * <span class="number">100.0</span>))</span><br><span class="line">        </span><br><span class="line">参考自@天国之影 http://relph.gitee.io/my-team-learning/<span class="comment">#/gnn_learning26/task02</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/08/18/hello-world/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ming Qin">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/18/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-08-18 21:14:53" itemprop="dateCreated datePublished" datetime="2021-08-18T21:14:53+08:00">2021-08-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-03-24 10:26:02" itemprop="dateModified" datetime="2021-03-24T10:26:02+08:00">2021-03-24</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/08/18/AI%E4%BA%A4%E5%8F%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ming Qin">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/18/AI%E4%BA%A4%E5%8F%89/" class="post-title-link" itemprop="url">Untitled</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-08-18 21:14:53" itemprop="dateCreated datePublished" datetime="2021-08-18T21:14:53+08:00">2021-08-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-06-04 19:51:49" itemprop="dateModified" datetime="2021-06-04T19:51:49+08:00">2021-06-04</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/16/%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ming Qin">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/16/%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E7%AC%94%E8%AE%B0/" class="post-title-link" itemprop="url">知识图谱笔记</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-04-16 21:40:42" itemprop="dateCreated datePublished" datetime="2021-04-16T21:40:42+08:00">2021-04-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-04-28 10:56:20" itemprop="dateModified" datetime="2021-04-28T10:56:20+08:00">2021-04-28</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="知识图谱"><a href="#知识图谱" class="headerlink" title="知识图谱"></a>知识图谱</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/km1994/NLP-Interview-Notes/tree/main/NLPinterview/KG">https://github.com/km1994/NLP-Interview-Notes/tree/main/NLPinterview/KG</a></li>
+</ul>
+<ol>
+<li>什么是schema？<br> 即是给出特定的数据格式，如实体的属性只有年龄 姓名，那么加入此知识图谱的实体就必须符合这个要求，加入如“性别”就不行。</li>
+<li>信息抽取的难点在哪里？<br> 处理非结构化数据，抽取出结构化数据（实体和关系）</li>
+<li>构建KG所涉及到的技术<ul>
+<li>NER（实体命名识别）<ul>
+<li>目标：从文本中提取出实体并对每个实体做“分类/打标签”<br>如“Virgil’s BBQ”提取出并标记上“Restaurant”</li>
+<li>目前技术已经比较成熟</li>
+</ul>
+</li>
+<li>关系抽取（Relation Extaction）</li>
+<li>实体对齐（Entity Resolution **）<ul>
+<li>如NYC和new york city指得同一个东西需要对齐</li>
+</ul>
+</li>
+<li>指代消解（Coreference Resolution）<br>“it”指代的哪个名词</li>
+</ul>
+</li>
+<li>KG的存储和查询<ul>
+<li>知识图谱并不一定用图数据库（PDB），数据库只是一种存储形式，特定场景可以用不同数据库（如不用扩展的可以用关系型数据库）</li>
+<li>eg： 查 Bob’s friend’s friend’s friend<ul>
+<li>若使用关系型数据库，就要一直做joint，查询时间指数级增长</li>
+<li>但是若使用图数据库，查询时间只会线性增长</li>
+</ul>
+</li>
+<li>PDB图数据库的好处：<ul>
+<li>表达更接近于自然语言</li>
+<li>易扩展</li>
+<li>性能好</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/24/hexo%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -351,76 +709,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/24/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ming Qin">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/24/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-03-24 10:26:02" itemprop="dateCreated datePublished" datetime="2021-03-24T10:26:02+08:00">2021-03-24</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
 
@@ -487,12 +775,12 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">tags</span>
       </div>
   </nav>

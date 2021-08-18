@@ -20,19 +20,20 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+  <meta name="description" content="知识图谱 https:&#x2F;&#x2F;github.com&#x2F;km1994&#x2F;NLP-Interview-Notes&#x2F;tree&#x2F;main&#x2F;NLPinterview&#x2F;KG   什么是schema？ 即是给出特定的数据格式，如实体的属性只有年龄 姓名，那么加入此知识图谱的实体就必须符合这个要求，加入如“性别”就不行。 信息抽取的难点在哪里？ 处理非结构化数据，抽取出结构化数据（实体和关系） 构建KG所涉及到的技术 N">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://example.com/2021/03/24/hello-world/index.html">
+<meta property="og:title" content="知识图谱笔记">
+<meta property="og:url" content="http://example.com/2021/04/16/%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E7%AC%94%E8%AE%B0/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="知识图谱 https:&#x2F;&#x2F;github.com&#x2F;km1994&#x2F;NLP-Interview-Notes&#x2F;tree&#x2F;main&#x2F;NLPinterview&#x2F;KG   什么是schema？ 即是给出特定的数据格式，如实体的属性只有年龄 姓名，那么加入此知识图谱的实体就必须符合这个要求，加入如“性别”就不行。 信息抽取的难点在哪里？ 处理非结构化数据，抽取出结构化数据（实体和关系） 构建KG所涉及到的技术 N">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2021-03-24T02:26:02.234Z">
-<meta property="article:modified_time" content="2021-03-24T02:26:02.234Z">
+<meta property="article:published_time" content="2021-04-16T13:40:42.000Z">
+<meta property="article:modified_time" content="2021-04-28T02:56:20.908Z">
 <meta property="article:author" content="Ming Qin">
+<meta property="article:tag" content="NLP">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/2021/03/24/hello-world/">
+<link rel="canonical" href="http://example.com/2021/04/16/%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E7%AC%94%E8%AE%B0/">
 
 
 <script id="page-configurations">
@@ -45,7 +46,7 @@
   };
 </script>
 
-  <title>Hello World | Hexo</title>
+  <title>知识图谱笔记 | Hexo</title>
   
 
 
@@ -150,7 +151,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/24/hello-world/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/16/%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E7%AC%94%E8%AE%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -163,7 +164,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Hello World
+          知识图谱笔记
         </h1>
 
         <div class="post-meta">
@@ -173,8 +174,15 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2021-03-24 10:26:02" itemprop="dateCreated datePublished" datetime="2021-03-24T10:26:02+08:00">2021-03-24</time>
+              <time title="Created: 2021-04-16 21:40:42" itemprop="dateCreated datePublished" datetime="2021-04-16T21:40:42+08:00">2021-04-16</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-04-28 10:56:20" itemprop="dateModified" datetime="2021-04-28T10:56:20+08:00">2021-04-28</time>
+              </span>
 
           
 
@@ -187,19 +195,42 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+        <h1 id="知识图谱"><a href="#知识图谱" class="headerlink" title="知识图谱"></a>知识图谱</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/km1994/NLP-Interview-Notes/tree/main/NLPinterview/KG">https://github.com/km1994/NLP-Interview-Notes/tree/main/NLPinterview/KG</a></li>
+</ul>
+<ol>
+<li>什么是schema？<br> 即是给出特定的数据格式，如实体的属性只有年龄 姓名，那么加入此知识图谱的实体就必须符合这个要求，加入如“性别”就不行。</li>
+<li>信息抽取的难点在哪里？<br> 处理非结构化数据，抽取出结构化数据（实体和关系）</li>
+<li>构建KG所涉及到的技术<ul>
+<li>NER（实体命名识别）<ul>
+<li>目标：从文本中提取出实体并对每个实体做“分类/打标签”<br>如“Virgil’s BBQ”提取出并标记上“Restaurant”</li>
+<li>目前技术已经比较成熟</li>
+</ul>
+</li>
+<li>关系抽取（Relation Extaction）</li>
+<li>实体对齐（Entity Resolution **）<ul>
+<li>如NYC和new york city指得同一个东西需要对齐</li>
+</ul>
+</li>
+<li>指代消解（Coreference Resolution）<br>“it”指代的哪个名词</li>
+</ul>
+</li>
+<li>KG的存储和查询<ul>
+<li>知识图谱并不一定用图数据库（PDB），数据库只是一种存储形式，特定场景可以用不同数据库（如不用扩展的可以用关系型数据库）</li>
+<li>eg： 查 Bob’s friend’s friend’s friend<ul>
+<li>若使用关系型数据库，就要一直做joint，查询时间指数级增长</li>
+<li>但是若使用图数据库，查询时间只会线性增长</li>
+</ul>
+</li>
+<li>PDB图数据库的好处：<ul>
+<li>表达更接近于自然语言</li>
+<li>易扩展</li>
+<li>性能好</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
 
     </div>
 
@@ -208,16 +239,22 @@
     
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/NLP/" rel="tag"># NLP</a>
+          </div>
 
         
 
 
         
     <div class="post-nav">
-      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/2021/03/24/Hello-World-Article/" rel="next" title="Hello, World Article!">
-      Hello, World Article! <i class="fa fa-chevron-right"></i>
+    <a href="/2021/03/24/hexo%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/" rel="prev" title="hexo调试日志">
+      <i class="fa fa-chevron-left"></i> hexo调试日志
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/08/18/AI%E4%BA%A4%E5%8F%89/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -277,7 +314,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1"><span class="nav-number">1.</span> <span class="nav-text">知识图谱</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -291,12 +328,12 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">tags</span>
       </div>
   </nav>
