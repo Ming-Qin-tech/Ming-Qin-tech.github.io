@@ -145,6 +145,391 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/08/27/Task06-Transformers%E8%A7%A3%E5%86%B3%E6%96%87%E6%9C%AC%E5%88%86%E7%B1%BB%E4%BB%BB%E5%8A%A1%E3%80%81%E8%B6%85%E5%8F%82%E6%90%9C%E7%B4%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ming Qin">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/27/Task06-Transformers%E8%A7%A3%E5%86%B3%E6%96%87%E6%9C%AC%E5%88%86%E7%B1%BB%E4%BB%BB%E5%8A%A1%E3%80%81%E8%B6%85%E5%8F%82%E6%90%9C%E7%B4%A2/" class="post-title-link" itemprop="url">Transformers解决文本分类任务、超参搜索</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-08-27 01:17:58 / Modified: 01:09:23" itemprop="dateCreated datePublished" datetime="2021-08-27T01:17:58+08:00">2021-08-27</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Task06-Transformers解决文本分类任务、超参搜索"><a href="#Task06-Transformers解决文本分类任务、超参搜索" class="headerlink" title="Task06-Transformers解决文本分类任务、超参搜索"></a>Task06-Transformers解决文本分类任务、超参搜索</h1><ul>
+<li>Datawhale 开源学习地址：<a target="_blank" rel="noopener" href="https://github.com/datawhalechina/learn-nlp-with-transformers">https://github.com/datawhalechina/learn-nlp-with-transformers</a></li>
+</ul>
+<h2 id="0-总结"><a href="#0-总结" class="headerlink" title="0 总结"></a>0 总结</h2><ul>
+<li>将BERT应用于文本分类</li>
+<li>数据预处理（tokenize）</li>
+<li>训练参数设定/模型评估</li>
+<li>超参数自动调优的两个库</li>
+<li>上传自己训练好的模型到ModelHub，多终端共享使用</li>
+<li>如果使用conda安装ray[tune]包时，请下载ray-tune依赖包<br>命令：conda install ray-tune -c conda-forge</li>
+</ul>
+<h2 id="1-文本分类任务简介"><a href="#1-文本分类任务简介" class="headerlink" title="1 文本分类任务简介"></a>1 文本分类任务简介</h2><ul>
+<li>使用Transformers代码库中的模型来解决文本分类任务，任务来源于<a target="_blank" rel="noopener" href="https://gluebenchmark.com/">GLUE Benchmark</a></li>
+<li>GLUE榜单的9个级别的分类任务：<ol>
+<li>CoLA (Corpus of Linguistic Acceptability)：鉴别一个句子是否语法正确.</li>
+<li>MNLI (Multi-Genre Natural Language Inference)：给定一个假设，判断另一个句子与该假设的关系：entails、contradicts、unrelated。</li>
+<li>MRPC (Microsoft Research Paraphrase Corpus)：判断两个句子是否互为paraphrases</li>
+<li>QNLI (Question-answering Natural Language Inference)：判断第2句是否包含第1句问题的答案</li>
+<li>QQP (Quora Question Pairs2)：判断两个问句是否语义相同</li>
+<li>RTE (Recognizing Textual Entailment)：判断一个句子是否与假设成entail关系</li>
+<li>SST-2 (Stanford Sentiment Treebank)：判断一个句子的情感正负向</li>
+<li>STS-B (Semantic Textual Similarity Benchmark)：判断两个句子的相似性（分数为1-5分）</li>
+<li>WNLI (Winograd Natural Language Inference)：判断带有匿名代词的句子中，是否存在能够替换该代词的子句</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GLUE_TASKS = [<span class="string">&quot;cola&quot;</span>, <span class="string">&quot;mnli&quot;</span>, <span class="string">&quot;mnli-mm&quot;</span>, <span class="string">&quot;mrpc&quot;</span>,</span><br><span class="line">              <span class="string">&quot;qnli&quot;</span>, <span class="string">&quot;qqp&quot;</span>, <span class="string">&quot;rte&quot;</span>, <span class="string">&quot;sst2&quot;</span>, <span class="string">&quot;stsb&quot;</span>, <span class="string">&quot;wnli&quot;</span>]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">task = <span class="string">&quot;cola&quot;</span></span><br><span class="line"><span class="comment"># 任务为CoLA任务</span></span><br><span class="line">model_checkpoint = <span class="string">&quot;distilbert-base-uncased&quot;</span></span><br><span class="line"><span class="comment"># 使用BERT蒸馏模型</span></span><br><span class="line">batch_size = <span class="number">16</span></span><br><span class="line"><span class="comment"># 根据GPU调整batch_size大小，避免显存溢出</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="2-加载数据"><a href="#2-加载数据" class="headerlink" title="2 加载数据"></a>2 加载数据</h2><h3 id="2-1-加载数据和对应的评测方式"><a href="#2-1-加载数据和对应的评测方式" class="headerlink" title="2.1 加载数据和对应的评测方式"></a>2.1 加载数据和对应的评测方式</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> datasets <span class="keyword">import</span> load_dataset, load_metric</span><br><span class="line"></span><br><span class="line">actual_task = <span class="string">&quot;mnli&quot;</span> <span class="keyword">if</span> task == <span class="string">&quot;mnli-mm&quot;</span> <span class="keyword">else</span> task</span><br><span class="line">dataset = load_dataset(<span class="string">&quot;glue&quot;</span>, actual_task)</span><br><span class="line">metric = load_metric(<span class="string">&#x27;glue&#x27;</span>, actual_task</span><br><span class="line"><span class="comment"># MNLI(The Multi-Genre Natural Language Inference Corpus, 多类型自然语言推理数据库)，自然语言推断任务，是通过众包方式对句子对进行文本蕴含标注的集合。</span></span><br><span class="line"><span class="comment"># 任务：句子对，一个前提，一个是假设。前提和假设的关系有三种情况：蕴含（entailment），矛盾（contradiction），中立（neutral）。句子对三分类问题。</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="2-2-查看数据"><a href="#2-2-查看数据" class="headerlink" title="2.2 查看数据"></a>2.2 查看数据</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dataset</span><br></pre></td></tr></table></figure>
+
+<pre><code>DatasetDict(&#123;
+    train: Dataset(&#123;
+        features: [&#39;sentence&#39;, &#39;label&#39;, &#39;idx&#39;],
+        num_rows: 8551
+    &#125;)
+    validation: Dataset(&#123;
+        features: [&#39;sentence&#39;, &#39;label&#39;, &#39;idx&#39;],
+        num_rows: 1043
+    &#125;)
+    test: Dataset(&#123;
+        features: [&#39;sentence&#39;, &#39;label&#39;, &#39;idx&#39;],
+        num_rows: 1063
+    &#125;)
+&#125;)
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dataset[<span class="string">&quot;train&quot;</span>][<span class="number">0</span>]</span><br><span class="line"><span class="comment"># 给定一个数据切分的key（train、validation或者test）和下标即可查看数据。</span></span><br></pre></td></tr></table></figure>
+<pre><code>&#123;&#39;sentence&#39;: &quot;Our friends won&#39;t buy this analysis, let alone the next one we propose.&quot;,
+    &#39;label&#39;: 1,
+    &#39;idx&#39;: 0&#125;
+</code></pre>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">import datasets</span><br><span class="line">import random</span><br><span class="line">import pandas as pd</span><br><span class="line">from IPython.display import display, HTML</span><br><span class="line"></span><br><span class="line">def show_random_elements(dataset, num_examples&#x3D;10):</span><br><span class="line">    assert num_examples &lt;&#x3D; len(dataset), &quot;Can&#39;t pick more elements than there are in the dataset.&quot;</span><br><span class="line">    picks &#x3D; []</span><br><span class="line">    for _ in range(num_examples):</span><br><span class="line">        pick &#x3D; random.randint(0, len(dataset)-1)</span><br><span class="line">        while pick in picks:</span><br><span class="line">            pick &#x3D; random.randint(0, len(dataset)-1)</span><br><span class="line">        picks.append(pick)</span><br><span class="line">    </span><br><span class="line">    df &#x3D; pd.DataFrame(dataset[picks])</span><br><span class="line">    for column, typ in dataset.features.items():</span><br><span class="line">        if isinstance(typ, datasets.ClassLabel):</span><br><span class="line">            df[column] &#x3D; df[column].transform(lambda i: typ.names[i])</span><br><span class="line">    display(HTML(df.to_html()))</span><br></pre></td></tr></table></figure>
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>sentence</th>
+      <th>label</th>
+      <th>idx</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>The more I talk to Joe, the less about linguistics I am inclined to think Sally has taught him to appreciate.</td>
+      <td>acceptable</td>
+      <td>196</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Have in our class the kids arrived safely?</td>
+      <td>unacceptable</td>
+      <td>3748</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>I gave Mary a book.</td>
+      <td>acceptable</td>
+      <td>5302</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Every student, who attended the party, had a good time.</td>
+      <td>unacceptable</td>
+      <td>4944</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Bill pounded the metal fiat.</td>
+      <td>acceptable</td>
+      <td>2178</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>It bit me on the leg.</td>
+      <td>acceptable</td>
+      <td>5908</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>The boys were made a good mother by Aunt Mary.</td>
+      <td>unacceptable</td>
+      <td>736</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>More of a man is here.</td>
+      <td>unacceptable</td>
+      <td>5403</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>My mother baked me a birthday cake.</td>
+      <td>acceptable</td>
+      <td>3761</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>Gregory appears to have wanted to be loyal to the company.</td>
+      <td>acceptable</td>
+      <td>4334</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="2-3-查看评测方法及常见分类"><a href="#2-3-查看评测方法及常见分类" class="headerlink" title="2.3 查看评测方法及常见分类"></a>2.3 查看评测方法及常见分类</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">metric</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<ul>
+<li>metic是<a target="_blank" rel="noopener" href="https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Metric"><code>datasets.Metric</code></a>的一个实例:</li>
+</ul>
+<pre><code>Metric(name: &quot;glue&quot;, features: &#123;&#39;predictions&#39;: Value(dtype=&#39;int64&#39;, id=None), &#39;references&#39;: Value(dtype=&#39;int64&#39;, id=None)&#125;, usage: &quot;&quot;&quot;
+Compute GLUE evaluation metric associated to each GLUE dataset.
+Args:
+    predictions: list of predictions to score.
+        Each translation should be tokenized into a list of tokens.
+    references: list of lists of references for each translation.
+        Each reference should be tokenized into a list of tokens.
+Returns: depending on the GLUE subset, one or several of:
+    &quot;accuracy&quot;: Accuracy
+    &quot;f1&quot;: F1 score
+    &quot;pearson&quot;: Pearson Correlation
+    &quot;spearmanr&quot;: Spearman Correlation
+    &quot;matthews_correlation&quot;: Matthew Correlation
+Examples:
+
+    &gt;&gt;&gt; glue_metric = datasets.load_metric(&#39;glue&#39;, &#39;sst2&#39;)  # &#39;sst2&#39; or any of [&quot;mnli&quot;, &quot;mnli_mismatched&quot;, &quot;mnli_matched&quot;, &quot;qnli&quot;, &quot;rte&quot;, &quot;wnli&quot;, &quot;hans&quot;]
+    &gt;&gt;&gt; references = [0, 1]
+    &gt;&gt;&gt; predictions = [0, 1]
+    &gt;&gt;&gt; results = glue_metric.compute(predictions=predictions, references=references)
+    &gt;&gt;&gt; print(results)
+    &#123;&#39;accuracy&#39;: 1.0&#125;
+
+    &gt;&gt;&gt; glue_metric = datasets.load_metric(&#39;glue&#39;, &#39;mrpc&#39;)  # &#39;mrpc&#39; or &#39;qqp&#39;
+    &gt;&gt;&gt; references = [0, 1]
+    &gt;&gt;&gt; predictions = [0, 1]
+    &gt;&gt;&gt; results = glue_metric.compute(predictions=predictions, references=references)
+    &gt;&gt;&gt; print(results)
+    &#123;&#39;accuracy&#39;: 1.0, &#39;f1&#39;: 1.0&#125;
+
+    &gt;&gt;&gt; glue_metric = datasets.load_metric(&#39;glue&#39;, &#39;stsb&#39;)
+    &gt;&gt;&gt; references = [0., 1., 2., 3., 4., 5.]
+    &gt;&gt;&gt; predictions = [0., 1., 2., 3., 4., 5.]
+    &gt;&gt;&gt; results = glue_metric.compute(predictions=predictions, references=references)
+    &gt;&gt;&gt; print(&#123;&quot;pearson&quot;: round(results[&quot;pearson&quot;], 2), &quot;spearmanr&quot;: round(results[&quot;spearmanr&quot;], 2)&#125;)
+    &#123;&#39;pearson&#39;: 1.0, &#39;spearmanr&#39;: 1.0&#125;
+
+    &gt;&gt;&gt; glue_metric = datasets.load_metric(&#39;glue&#39;, &#39;cola&#39;)
+    &gt;&gt;&gt; references = [0, 1]
+    &gt;&gt;&gt; predictions = [0, 1]
+    &gt;&gt;&gt; results = glue_metric.compute(predictions=predictions, references=references)
+    &gt;&gt;&gt; print(results)
+    &#123;&#39;matthews_correlation&#39;: 1.0&#125;
+&quot;&quot;&quot;, stored examples: 0)
+</code></pre>
+<p>直接调用metric的<code>compute</code>方法，传入<code>labels</code>和<code>predictions</code>即可得到metric的值：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line">fake_preds = np.random.randint(<span class="number">0</span>, <span class="number">2</span>, size=(<span class="number">64</span>,))</span><br><span class="line">fake_labels = np.random.randint(<span class="number">0</span>, <span class="number">2</span>, size=(<span class="number">64</span>,))</span><br><span class="line">metric.compute(predictions=fake_preds, references=fake_labels)</span><br></pre></td></tr></table></figure>
+
+<pre><code>&#123;&#39;matthews_correlation&#39;: 0.1513518081969605&#125;
+</code></pre>
+<p>每一个文本分类任务所对应的metic有所不同，具体如下:</p>
+<table>
+<thead>
+<tr>
+<th align="center">任务</th>
+<th align="center">评测方法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">CoLA</td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Matthews_correlation_coefficient">Matthews Correlation Coefficient</a></td>
+</tr>
+<tr>
+<td align="center">MNLI</td>
+<td align="center">Accuracy</td>
+</tr>
+<tr>
+<td align="center">MRPC</td>
+<td align="center">Accuracy and <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/F1_score">F1 score</a></td>
+</tr>
+<tr>
+<td align="center">QNLI</td>
+<td align="center">Accuracy</td>
+</tr>
+<tr>
+<td align="center">QQP</td>
+<td align="center">Accuracy and F1 score</td>
+</tr>
+<tr>
+<td align="center">RTE</td>
+<td align="center">Accuracy</td>
+</tr>
+<tr>
+<td align="center">SST-2</td>
+<td align="center">Accuracy</td>
+</tr>
+<tr>
+<td align="center">STS-B</td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson Correlation Coefficient</a> and <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient">Spearman’s_Rank_Correlation_Coefficient</a></td>
+</tr>
+<tr>
+<td align="center">WNLI</td>
+<td align="center">Accuracy</td>
+</tr>
+</tbody></table>
+<p>所以一定要将metric和任务对齐</p>
+<h2 id="3-数据预处理"><a href="#3-数据预处理" class="headerlink" title="3 数据预处理"></a>3 数据预处理</h2><h3 id="3-1-数据预处理流程"><a href="#3-1-数据预处理流程" class="headerlink" title="3.1 数据预处理流程"></a>3.1 数据预处理流程</h3><p>预处理目的：数据只有经过预处理后，才能作为向量形式输入model。</p>
+<ul>
+<li>流程：<ol>
+<li>对输入数据进行tokenize，得到tokens</li>
+<li>将tokens转化为预训练模型中需要对应的token ID</li>
+<li>将token ID转化为模型需要的输入格式</li>
+</ol>
+</li>
+</ul>
+<p>为了达到数据预处理的目的，我们使用<code>AutoTokenizer.from_pretrained</code>方法实例化我们的tokenizer，这样可以确保：（？？？？）</p>
+<ul>
+<li>我们得到一个与预训练模型一一对应的tokenizer。</li>
+<li>使用指定的模型checkpoint对应的tokenizer的时候，我们也下载了模型需要的词表库vocabulary，准确来说是tokens vocabulary。</li>
+</ul>
+<p>这个被下载的tokens vocabulary会被缓存起来，从而再次使用的时候不会重新下载。</p>
+<h3 id="3-2-构建模型对应的tokenizer"><a href="#3-2-构建模型对应的tokenizer" class="headerlink" title="3.2 构建模型对应的tokenizer"></a>3.2 构建模型对应的tokenizer</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoTokenizer</span><br><span class="line">    </span><br><span class="line">tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, use_fast=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+<p>注意：</p>
+<ul>
+<li><code>use_fast=True</code>要求tokenizer必须是transformers.PreTrainedTokenizerFast类型，</li>
+<li>因为我们在预处理的时候需要用到fast tokenizer的一些特殊特性（比如多线程快速tokenizer）。</li>
+<li>如果对应的模型没有fast tokenizer，去掉这个选项即可。</li>
+<li>几乎所有模型对应的tokenizer都有对应的fast tokenizer。我们可以在<a target="_blank" rel="noopener" href="https://huggingface.co/transformers/index.html#bigtable">模型tokenizer对应表</a>里查看所有预训练模型对应的tokenizer所拥有的特点。</li>
+</ul>
+<p>tokenizer既可以对单个文本进行预处理，也可以对一对文本进行预处理，tokenizer预处理后得到的数据满足预训练模型输入格式。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tokenizer(<span class="string">&quot;Hello, this one sentence!&quot;</span>, <span class="string">&quot;And this sentence goes with it.&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>&#123;&#39;input_ids&#39;: [101, 7592, 1010, 2023, 2028, 6251, 999, 102, 1998, 2023, 6251, 3632, 2007, 2009, 1012, 102], &#39;attention_mask&#39;: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]&#125;
+</code></pre>
+<p>取决于我们选择的预训练模型，我们将会看到tokenizer有不同的返回，tokenizer和预训练模型是一一对应的，更多信息可以在<a target="_blank" rel="noopener" href="https://huggingface.co/transformers/preprocessing.html">这里</a>进行学习。</p>
+<h3 id="3-3-对数据集datasets所有样本进行预处理"><a href="#3-3-对数据集datasets所有样本进行预处理" class="headerlink" title="3.3  对数据集datasets所有样本进行预处理"></a>3.3  对数据集datasets所有样本进行预处理</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 定义如下dict，用于对数据格式进行检查</span></span><br><span class="line">task_to_keys = &#123;</span><br><span class="line">    <span class="string">&quot;cola&quot;</span>: (<span class="string">&quot;sentence&quot;</span>, <span class="literal">None</span>),</span><br><span class="line">    <span class="string">&quot;mnli&quot;</span>: (<span class="string">&quot;premise&quot;</span>, <span class="string">&quot;hypothesis&quot;</span>),</span><br><span class="line">    <span class="string">&quot;mnli-mm&quot;</span>: (<span class="string">&quot;premise&quot;</span>, <span class="string">&quot;hypothesis&quot;</span>),</span><br><span class="line">    <span class="string">&quot;mrpc&quot;</span>: (<span class="string">&quot;sentence1&quot;</span>, <span class="string">&quot;sentence2&quot;</span>),</span><br><span class="line">    <span class="string">&quot;qnli&quot;</span>: (<span class="string">&quot;question&quot;</span>, <span class="string">&quot;sentence&quot;</span>),</span><br><span class="line">    <span class="string">&quot;qqp&quot;</span>: (<span class="string">&quot;question1&quot;</span>, <span class="string">&quot;question2&quot;</span>),</span><br><span class="line">    <span class="string">&quot;rte&quot;</span>: (<span class="string">&quot;sentence1&quot;</span>, <span class="string">&quot;sentence2&quot;</span>),</span><br><span class="line">    <span class="string">&quot;sst2&quot;</span>: (<span class="string">&quot;sentence&quot;</span>, <span class="literal">None</span>),</span><br><span class="line">    <span class="string">&quot;stsb&quot;</span>: (<span class="string">&quot;sentence1&quot;</span>, <span class="string">&quot;sentence2&quot;</span>),</span><br><span class="line">    <span class="string">&quot;wnli&quot;</span>: (<span class="string">&quot;sentence1&quot;</span>, <span class="string">&quot;sentence2&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 对数据格式进行检查</span></span><br><span class="line">sentence1_key, sentence2_key = task_to_keys[task]</span><br><span class="line"><span class="keyword">if</span> sentence2_key <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Sentence: <span class="subst">&#123;dataset[<span class="string">&#x27;train&#x27;</span>][<span class="number">0</span>][sentence1_key]&#125;</span>&quot;</span>)</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Sentence 1: <span class="subst">&#123;dataset[<span class="string">&#x27;train&#x27;</span>][<span class="number">0</span>][sentence1_key]&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Sentence 2: <span class="subst">&#123;dataset[<span class="string">&#x27;train&#x27;</span>][<span class="number">0</span>][sentence2_key]&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Sentence: Our friends won&#39;t buy this analysis, let alone the next one we propose.
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 由上面思路构造预处理函数</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">preprocess_function</span>(<span class="params">examples</span>):</span></span><br><span class="line">    <span class="keyword">if</span> sentence2_key <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="keyword">return</span> tokenizer(examples[sentence1_key], truncation=<span class="literal">True</span>)</span><br><span class="line">    <span class="keyword">return</span> tokenizer(examples[sentence1_key], examples[sentence2_key], truncation=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 举例</span></span><br><span class="line"><span class="comment"># 预处理函数可以处理单个样本，也可以对多个样本进行处理。如果输入是多个样本，那么返回的是一个list：</span></span><br><span class="line">preprocess_function(dataset[<span class="string">&#x27;train&#x27;</span>][:<span class="number">5</span>])</span><br></pre></td></tr></table></figure>
+
+<pre><code>&#123;&#39;input_ids&#39;: [[101, 2256, 2814, 2180, 1005, 1056, 4965, 2023, 4106, 1010, 2292, 2894, 1996, 2279, 2028, 2057, 16599, 1012, 102], [101, 2028, 2062, 18404, 2236, 3989, 1998, 1045, 1005, 1049, 3228, 2039, 1012, 102], [101, 2028, 2062, 18404, 2236, 3989, 2030, 1045, 1005, 1049, 3228, 2039, 1012, 102], [101, 1996, 2062, 2057, 2817, 16025, 1010, 1996, 13675, 16103, 2121, 2027, 2131, 1012, 102], [101, 2154, 2011, 2154, 1996, 8866, 2024, 2893, 14163, 8024, 3771, 1012, 102]], &#39;attention_mask&#39;: [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]&#125;
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 对datasets里所有样本进行预处理</span></span><br><span class="line">encoded_dataset = dataset.<span class="built_in">map</span>(preprocess_function, batched=<span class="literal">True</span>)</span><br><span class="line"><span class="comment"># 使用map：将预处理函数prepare_train_features应用到（map)所有样本上。</span></span><br></pre></td></tr></table></figure>
+
+<p>另外，返回的结果会自动被缓存，避免下次处理的时候重新计算（但是也要注意，如果输入有改动，可能会被缓存影响！）。<br>datasets库函数会对输入的参数进行检测，判断是否有变化，如果没有变化就使用缓存数据，如果有变化就重新处理。但如果输入参数不变，只是想改变输入数据的时候，最好清理调这个缓存。清理的方式是使用<code>load_from_cache_file=False</code>参数。<br>另外，上面使用到的<code>batched=True</code>这个参数是tokenizer的特点，这会使用多线程同时并行对输入进行处理。</p>
+<h2 id="4-微调预训练模型"><a href="#4-微调预训练模型" class="headerlink" title="4 微调预训练模型"></a>4 微调预训练模型</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoModelForSequenceClassification, TrainingArguments, Trainer</span><br><span class="line"><span class="comment"># 做seq2seq任务，需要一个能解决这个任务的模型类。这里使用`AutoModelForSequenceClassification`类 。</span></span><br><span class="line">num_labels = <span class="number">3</span> <span class="keyword">if</span> task.startswith(<span class="string">&quot;mnli&quot;</span>) <span class="keyword">else</span> <span class="number">1</span> <span class="keyword">if</span> task==<span class="string">&quot;stsb&quot;</span> <span class="keyword">else</span> <span class="number">2</span></span><br><span class="line">model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)</span><br><span class="line"><span class="comment"># `from_pretrained`方法可以下载并加载模型，同时也会对模型进行缓存。</span></span><br></pre></td></tr></table></figure>
+<p>需要注意的是：STS-B是一个回归问题，MNLI是一个3分类问题。</p>
+<p>由于我们微调的任务是文本分类任务，而我们加载的是预训练的语言模型，所以会提示我们加载模型的时候扔掉了一些不匹配的神经网络参数（比如：预训练语言模型的神经网络head被扔掉了，同时随机初始化了文本分类的神经网络head）。？？？？</p>
+<h3 id="4-1-训练参数"><a href="#4-1-训练参数" class="headerlink" title="4.1 训练参数"></a>4.1 训练参数</h3><p>训练的设定/参数 <a target="_blank" rel="noopener" href="https://huggingface.co/transformers/main_classes/trainer.html#transformers.TrainingArguments"><code>TrainingArguments</code></a>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">metric_name = <span class="string">&quot;pearson&quot;</span> <span class="keyword">if</span> task == <span class="string">&quot;stsb&quot;</span> <span class="keyword">else</span> <span class="string">&quot;matthews_correlation&quot;</span> <span class="keyword">if</span> task == <span class="string">&quot;cola&quot;</span> <span class="keyword">else</span> <span class="string">&quot;accuracy&quot;</span></span><br><span class="line"></span><br><span class="line">args = TrainingArguments(</span><br><span class="line">    <span class="string">&quot;test-glue&quot;</span>,</span><br><span class="line">    evaluation_strategy = <span class="string">&quot;epoch&quot;</span>,</span><br><span class="line">    <span class="comment"># 每训练一个epoch做一次验证评估</span></span><br><span class="line">    save_strategy = <span class="string">&quot;epoch&quot;</span>,</span><br><span class="line">    learning_rate=<span class="number">2e-5</span>,</span><br><span class="line">    per_device_train_batch_size=batch_size,</span><br><span class="line">    per_device_eval_batch_size=batch_size,</span><br><span class="line">    num_train_epochs=<span class="number">5</span>,</span><br><span class="line">    weight_decay=<span class="number">0.01</span>,</span><br><span class="line">    load_best_model_at_end=<span class="literal">True</span>,</span><br><span class="line">    metric_for_best_model=metric_name,</span><br><span class="line">    <span class="comment"># 包含了能够定义训练过程的所有属性</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h3 id="4-2-评估方法"><a href="#4-2-评估方法" class="headerlink" title="4.2 评估方法"></a>4.2 评估方法</h3><p>不同的任务需要不同的评价指标，定义一个函数根据名字匹配评价方法。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">compute_metrics</span>(<span class="params">eval_pred</span>):</span></span><br><span class="line">    predictions, labels = eval_pred</span><br><span class="line">    <span class="keyword">if</span> task != <span class="string">&quot;stsb&quot;</span>:</span><br><span class="line">        predictions = np.argmax(predictions, axis=<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        predictions = predictions[:, <span class="number">0</span>]</span><br><span class="line">    <span class="keyword">return</span> metric.compute(predictions=predictions, references=labels)</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-3-将上述定义好的参数及方法全部传入Trainer"><a href="#4-3-将上述定义好的参数及方法全部传入Trainer" class="headerlink" title="4.3 将上述定义好的参数及方法全部传入Trainer"></a>4.3 将上述定义好的参数及方法全部传入Trainer</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">validation_key = <span class="string">&quot;validation_mismatched&quot;</span> <span class="keyword">if</span> task == <span class="string">&quot;mnli-mm&quot;</span> <span class="keyword">else</span> <span class="string">&quot;validation_matched&quot;</span> <span class="keyword">if</span> task == <span class="string">&quot;mnli&quot;</span> <span class="keyword">else</span> <span class="string">&quot;validation&quot;</span></span><br><span class="line">trainer = Trainer(</span><br><span class="line">    model,</span><br><span class="line">    args,</span><br><span class="line">    train_dataset=encoded_dataset[<span class="string">&quot;train&quot;</span>],</span><br><span class="line">    eval_dataset=encoded_dataset[validation_key],</span><br><span class="line">    tokenizer=tokenizer,</span><br><span class="line">    compute_metrics=compute_metrics</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-4-训练及评估"><a href="#4-4-训练及评估" class="headerlink" title="4.4 训练及评估"></a>4.4 训练及评估</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">trainer.train()</span><br></pre></td></tr></table></figure>
+
+<pre><code>TrainOutput(global_step=2675, training_loss=0.2717150308484229, metrics=&#123;&#39;train_runtime&#39;: 100.5668, &#39;train_samples_per_second&#39;: 425.14, &#39;train_steps_per_second&#39;: 26.599, &#39;total_flos&#39;: 229537542078168.0, &#39;train_loss&#39;: 0.2717150308484229, &#39;epoch&#39;: 5.0&#125;)
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">trainer.evaluate()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+
+<p>  <progress value='66' max='66' style='width:300px; height:20px; vertical-align: middle;'></progress><br>  [66/66 00:00]</p>
+</div>
+
+
+
+
+
+
+<pre><code>&#123;&#39;eval_loss&#39;: 0.8624260425567627,
+ &#39;eval_matthews_correlation&#39;: 0.519563286537562,
+ &#39;eval_runtime&#39;: 0.6501,
+ &#39;eval_samples_per_second&#39;: 1604.31,
+ &#39;eval_steps_per_second&#39;: 101.519,
+ &#39;epoch&#39;: 5.0&#125;
+</code></pre>
+<h2 id="5-超参数搜索"><a href="#5-超参数搜索" class="headerlink" title="5. 超参数搜索"></a>5. 超参数搜索</h2><p><code>Trainer</code>同样支持超参搜索，使用<a target="_blank" rel="noopener" href="https://optuna.org/">optuna</a> or <a target="_blank" rel="noopener" href="https://docs.ray.io/en/latest/tune/">Ray Tune</a>代码库。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">! pip install optuna</span><br><span class="line">! pip install ray[tune]</span><br><span class="line"><span class="comment"># 安装两个超参数自动调优库</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-1-设置初始化模型"><a href="#5-1-设置初始化模型" class="headerlink" title="5.1 设置初始化模型"></a>5.1 设置初始化模型</h3><p>超参搜索时，<code>Trainer</code>将会返回多个训练好的模型，所以需要传入一个定义好的模型从而让<code>Trainer</code>可以不断重新初始化该传入的模型：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">model_init</span>():</span></span><br><span class="line">    <span class="keyword">return</span> AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">trainer = Trainer(</span><br><span class="line">    model_init=model_init,</span><br><span class="line">    args=args,</span><br><span class="line">    train_dataset=encoded_dataset[<span class="string">&quot;train&quot;</span>],</span><br><span class="line">    eval_dataset=encoded_dataset[validation_key],</span><br><span class="line">    tokenizer=tokenizer,</span><br><span class="line">    compute_metrics=compute_metrics</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h3 id="5-2-使用超参调优库"><a href="#5-2-使用超参调优库" class="headerlink" title="5.2 使用超参调优库"></a>5.2 使用超参调优库</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">best_run = trainer.hyperparameter_search(n_trials=<span class="number">10</span>, direction=<span class="string">&quot;maximize&quot;</span>)</span><br><span class="line"><span class="comment"># `hyperparameter_search`会返回效果最好的模型相关的参数</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">best_run</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> n, v <span class="keyword">in</span> best_run.hyperparameters.items():</span><br><span class="line">    <span class="built_in">setattr</span>(trainer.args, n, v)</span><br><span class="line"><span class="comment"># 将最好的超参数应用于`Trainner`</span></span><br><span class="line">trainer.train()</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-上传模型到model-hub"><a href="#6-上传模型到model-hub" class="headerlink" title="6 上传模型到model-hub"></a>6 上传模型到model-hub</h2><p>类似于docker-hub，可以上传自己配置好的模型</p>
+<p><a target="_blank" rel="noopener" href="https://huggingface.co/transformers/model_sharing.html">上传模型到</a> 到<a target="_blank" rel="noopener" href="https://huggingface.co/models"> Model Hub</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/08/24/NLP-Transformer-task03/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1342,7 +1727,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
