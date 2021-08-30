@@ -262,7 +262,8 @@
 <li>忽略-100所在地方</li>
 </ul>
 <h2 id="5-3-将参数设置和评估方法两步整合起来"><a href="#5-3-将参数设置和评估方法两步整合起来" class="headerlink" title="5.3 将参数设置和评估方法两步整合起来"></a>5.3 将参数设置和评估方法两步整合起来</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">compute_metrics</span>(<span class="params">p</span>):</span></span><br><span class="line">    predictions, labels = p</span><br><span class="line">    predictions = np.argmax(predictions, axis=<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Remove ignored index (special tokens)</span></span><br><span class="line">    true_predictions = [</span><br><span class="line">        [label_list[p] <span class="keyword">for</span> (p, l) <span class="keyword">in</span> <span class="built_in">zip</span>(prediction, label) <span class="keyword">if</span> l != -<span class="number">100</span>]</span><br><span class="line">        <span class="keyword">for</span> prediction, label <span class="keyword">in</span> <span class="built_in">zip</span>(predictions, labels)</span><br><span class="line">    ]</span><br><span class="line">    true_labels = [</span><br><span class="line">        [label_list[l] <span class="keyword">for</span> (p, l) <span class="keyword">in</span> <span class="built_in">zip</span>(prediction, label) <span class="keyword">if</span> l != -<span class="number">100</span>]</span><br><span class="line">        <span class="keyword">for</span> prediction, label <span class="keyword">in</span> <span class="built_in">zip</span>(predictions, labels)</span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    results = metric.compute(predictions=true_predictions, references=true_labels)</span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;precision&quot;</span>: results[<span class="string">&quot;overall_precision&quot;</span>],</span><br><span class="line">        <span class="string">&quot;recall&quot;</span>: results[<span class="string">&quot;overall_recall&quot;</span>],</span><br><span class="line">        <span class="string">&quot;f1&quot;</span>: results[<span class="string">&quot;overall_f1&quot;</span>],</span><br><span class="line">        <span class="string">&quot;accuracy&quot;</span>: results[<span class="string">&quot;overall_accuracy&quot;</span>],</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<hr>
+
+
 <p>我们计算所有类别总的precision/recall/f1，所以会扔掉单个类别的precision/recall/f1 </p>
 <p>将数据/模型/参数传入<code>Trainer</code>即可</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">trainer = Trainer(</span><br><span class="line">    model,</span><br><span class="line">    args,</span><br><span class="line">    train_dataset=tokenized_datasets[<span class="string">&quot;train&quot;</span>],</span><br><span class="line">    eval_dataset=tokenized_datasets[<span class="string">&quot;validation&quot;</span>],</span><br><span class="line">    data_collator=data_collator,</span><br><span class="line">    tokenizer=tokenizer,</span><br><span class="line">    compute_metrics=compute_metrics</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
@@ -272,62 +273,58 @@
 
 
 
-<pre><code>&lt;div&gt;
-    &lt;style&gt;
-        /* Turns off some styling */
-        progress &#123;
-            /* gets rid of default border in Firefox and Opera. */
-            border: none;
-            /* Needs to be in here for Safari polyfill so background images work as expected. */
-            background-size: auto;
-        &#125;
-    &lt;/style&gt;
+  <div>
+      <style>
+          /* Turns off some styling */
+          progress {
+              /* gets rid of default border in Firefox and Opera. */
+              border: none;
+              /* Needs to be in here for Safari polyfill so background images work as expected. */
+              background-size: auto;
+          }
+      </style>
 
-  &lt;progress value=&#39;2634&#39; max=&#39;2634&#39; style=&#39;width:300px; height:20px; vertical-align: middle;&#39;&gt;&lt;/progress&gt;
-  [2634/2634 01:45, Epoch 3/3]
-&lt;/div&gt;
-&lt;table border=&quot;1&quot; class=&quot;dataframe&quot;&gt;
-</code></pre>
-  <thead>
-    <tr style="text-align: left;">
-      <th>Epoch</th>
-      <th>Training Loss</th>
-      <th>Validation Loss</th>
-      <th>Precision</th>
-      <th>Recall</th>
-      <th>F1</th>
-      <th>Accuracy</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1</td>
-      <td>0.237721</td>
-      <td>0.068198</td>
-      <td>0.903148</td>
-      <td>0.921132</td>
-      <td>0.912051</td>
-      <td>0.979713</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>0.053160</td>
-      <td>0.059337</td>
-      <td>0.927697</td>
-      <td>0.932990</td>
-      <td>0.930336</td>
-      <td>0.983113</td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>0.029850</td>
-      <td>0.059346</td>
-      <td>0.929267</td>
-      <td>0.939143</td>
-      <td>0.934179</td>
-      <td>0.984257</td>
-    </tr>
-  </tbody>
+<p>  <progress value='2634' max='2634' style='width:300px; height:20px; vertical-align: middle;'></progress><br>  [2634/2634 01:45, Epoch 3/3]<br>  </div><br>  <table border="1" class="dataframe"></p>
+<thead>
+  <tr style="text-align: left;">
+    <th>Epoch</th>
+    <th>Training Loss</th>
+    <th>Validation Loss</th>
+    <th>Precision</th>
+    <th>Recall</th>
+    <th>F1</th>
+    <th>Accuracy</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>1</td>
+    <td>0.237721</td>
+    <td>0.068198</td>
+    <td>0.903148</td>
+    <td>0.921132</td>
+    <td>0.912051</td>
+    <td>0.979713</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>0.053160</td>
+    <td>0.059337</td>
+    <td>0.927697</td>
+    <td>0.932990</td>
+    <td>0.930336</td>
+    <td>0.983113</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>0.029850</td>
+    <td>0.059346</td>
+    <td>0.929267</td>
+    <td>0.939143</td>
+    <td>0.934179</td>
+    <td>0.984257</td>
+  </tr>
+</tbody>
 </table><p>
 
 
@@ -336,7 +333,7 @@
 
 <pre><code>TrainOutput(global_step=2634, training_loss=0.08569671253227518)
 </code></pre>
-<p>我们可以再次使用<code>evaluate</code>方法评估，可以评估其他数据集。</p>
+<h1 id="6-对模型进行评估"><a href="#6-对模型进行评估" class="headerlink" title="6 对模型进行评估"></a>6 对模型进行评估</h1><h2 id="6-1-对总类别进行评估"><a href="#6-1-对总类别进行评估" class="headerlink" title="6.1 对总类别进行评估"></a>6.1 对总类别进行评估</h2><p>我们可以再次使用<code>evaluate</code>方法评估，可以评估其他数据集。</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">trainer.evaluate()</span><br></pre></td></tr></table></figure>
 
 
@@ -367,7 +364,7 @@
  &#39;eval_accuracy&#39;: 0.9842565968195466,
  &#39;epoch&#39;: 3.0&#125;
 </code></pre>
-<p>如果想要得到单个类别的precision/recall/f1，我们直接将结果输入相同的评估函数即可：</p>
+<h2 id="6-2-对单个类别进行评估"><a href="#6-2-对单个类别进行评估" class="headerlink" title="6.2 对单个类别进行评估"></a>6.2 对单个类别进行评估</h2><p>如果想要得到单个类别的precision/recall/f1，我们直接将结果输入相同的评估函数即可：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">predictions, labels, _ = trainer.predict(tokenized_datasets[<span class="string">&quot;validation&quot;</span>])</span><br><span class="line">predictions = np.argmax(predictions, axis=<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Remove ignored index (special tokens)</span></span><br><span class="line">true_predictions = [</span><br><span class="line">    [label_list[p] <span class="keyword">for</span> (p, l) <span class="keyword">in</span> <span class="built_in">zip</span>(prediction, label) <span class="keyword">if</span> l != -<span class="number">100</span>]</span><br><span class="line">    <span class="keyword">for</span> prediction, label <span class="keyword">in</span> <span class="built_in">zip</span>(predictions, labels)</span><br><span class="line">]</span><br><span class="line">true_labels = [</span><br><span class="line">    [label_list[l] <span class="keyword">for</span> (p, l) <span class="keyword">in</span> <span class="built_in">zip</span>(prediction, label) <span class="keyword">if</span> l != -<span class="number">100</span>]</span><br><span class="line">    <span class="keyword">for</span> prediction, label <span class="keyword">in</span> <span class="built_in">zip</span>(predictions, labels)</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">results = metric.compute(predictions=true_predictions, references=true_labels)</span><br><span class="line">results</span><br></pre></td></tr></table></figure>
 
 
@@ -394,8 +391,7 @@
  &#39;overall_f1&#39;: 0.9341790463472988,
  &#39;overall_accuracy&#39;: 0.9842565968195466&#125;
 </code></pre>
-<p>最后别忘了，查看如何上传模型 ，上传模型到](<a href="https://huggingface.co/transformers/model_sharing.html">https://huggingface.co/transformers/model_sharing.html</a>) 到<a href="https://huggingface.co/models">🤗 Model Hub</a>。随后您就可以像这个notebook一开始一样，直接用模型名字就能使用您自己上传的模型啦。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+<h1 id="7-将训练好的自己的模型上传到Model-Hub"><a href="#7-将训练好的自己的模型上传到Model-Hub" class="headerlink" title="7 将训练好的自己的模型上传到Model-Hub"></a>7 将训练好的自己的模型上传到Model-Hub</h1><p>最后别忘了，查看如何上传模型 ，上传模型到](<a href="https://huggingface.co/transformers/model_sharing.html">https://huggingface.co/transformers/model_sharing.html</a>) 到<a href="https://huggingface.co/models">🤗 Model Hub</a>。随后您就可以像这个notebook一开始一样，直接用模型名字就能使用您自己上传的模型啦。</p>
 ]]></content>
       
         
