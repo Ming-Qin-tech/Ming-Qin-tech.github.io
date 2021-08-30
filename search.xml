@@ -5,7 +5,8 @@
     <entry>
       <title><![CDATA[Task07-Transformer解决序列标注问题]]></title>
       <url>/2021/08/27/Task07-Transformer%E8%A7%A3%E5%86%B3%E5%BA%8F%E5%88%97%E6%A0%87%E6%B3%A8%E9%97%AE%E9%A2%98/</url>
-      <content type="html"><![CDATA[<h1 id="0-总结"><a href="#0-总结" class="headerlink" title="0 总结"></a>0 总结</h1><p>版本问题导致evaluate步骤出错<br>序列标注任务和文本分类任务相比，只是在最后一层有所改动</p>
+      <content type="html"><![CDATA[<h1 id="0-总结"><a href="#0-总结" class="headerlink" title="0 总结"></a>0 总结</h1><p>1.<br>trainer.evaluate()<br>AttributeError: ‘NoneType’ object has no attribute ‘log_metric’<br>解决：pip install tensorboard<br>分析：应当是tensorboard缺失或者版本不对</p>
+<p>2.<br>序列标注任务和文本分类任务相比，只是在最后一层有所改动</p>
 <h1 id="1-序列标注任务简介"><a href="#1-序列标注任务简介" class="headerlink" title="1 序列标注任务简介"></a>1 序列标注任务简介</h1><p>常见的三种token级别的分类任务：</p>
 <ul>
 <li>NER，标注 person、organization\location 等</li>
@@ -392,6 +393,10 @@
  &#39;overall_accuracy&#39;: 0.9842565968195466&#125;
 </code></pre>
 <h1 id="7-将训练好的自己的模型上传到Model-Hub"><a href="#7-将训练好的自己的模型上传到Model-Hub" class="headerlink" title="7 将训练好的自己的模型上传到Model-Hub"></a>7 将训练好的自己的模型上传到Model-Hub</h1><p>最后别忘了，查看如何上传模型 ，上传模型到](<a href="https://huggingface.co/transformers/model_sharing.html">https://huggingface.co/transformers/model_sharing.html</a>) 到<a href="https://huggingface.co/models">🤗 Model Hub</a>。随后您就可以像这个notebook一开始一样，直接用模型名字就能使用您自己上传的模型啦。</p>
+<h1 id="8-参考文献"><a href="#8-参考文献" class="headerlink" title="8 参考文献"></a>8 参考文献</h1><ol>
+<li>DataWhale开源文档：<a href="https://github.com/datawhalechina/learn-nlp-with-transformers">https://github.com/datawhalechina/learn-nlp-with-transformers</a></li>
+<li>“Relph Hu”个人博客：<a href="https://relph1119.github.io/my-team-learning/#/transformers_nlp28/task07">https://relph1119.github.io/my-team-learning/#/transformers_nlp28/task07</a></li>
+</ol>
 ]]></content>
       
         
