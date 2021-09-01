@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="0 总结1 抽取式问答简介由三部分组成：    - context 内容    - question 问题    - answer 答案 注意： answer的标注，除了给出文本之外，还给出了answer所在的位置Goal： 将新的文本中，针对新的问题，给出answer所在的位置（内容）简单的例子： 2 数据一窥12345678910111213141516171819202122from dat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Task08-问答任务-抽取式问答">
+<meta property="og:url" content="http://example.com/2021/08/30/Task08-%E9%97%AE%E7%AD%94%E4%BB%BB%E5%8A%A1-%E6%8A%BD%E5%8F%96%E5%BC%8F%E9%97%AE%E7%AD%94/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="0 总结1 抽取式问答简介由三部分组成：    - context 内容    - question 问题    - answer 答案 注意： answer的标注，除了给出文本之外，还给出了answer所在的位置Goal： 将新的文本中，针对新的问题，给出answer所在的位置（内容）简单的例子： 2 数据一窥12345678910111213141516171819202122from dat">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/08/30/Task08-%E9%97%AE%E7%AD%94%E4%BB%BB%E5%8A%A1-%E6%8A%BD%E5%8F%96%E5%BC%8F%E9%97%AE%E7%AD%94/question_answering.png">
+<meta property="article:published_time" content="2021-08-30T13:55:34.000Z">
+<meta property="article:modified_time" content="2021-09-01T11:17:23.411Z">
+<meta property="article:author" content="Ming Qin">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/08/30/Task08-%E9%97%AE%E7%AD%94%E4%BB%BB%E5%8A%A1-%E6%8A%BD%E5%8F%96%E5%BC%8F%E9%97%AE%E7%AD%94/question_answering.png">
+
+<link rel="canonical" href="http://example.com/2021/08/30/Task08-%E9%97%AE%E7%AD%94%E4%BB%BB%E5%8A%A1-%E6%8A%BD%E5%8F%96%E5%BC%8F%E9%97%AE%E7%AD%94/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Task08-问答任务-抽取式问答 | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/08/30/Task08-%E9%97%AE%E7%AD%94%E4%BB%BB%E5%8A%A1-%E6%8A%BD%E5%8F%96%E5%BC%8F%E9%97%AE%E7%AD%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ming Qin">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Task08-问答任务-抽取式问答
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-08-30 21:55:34" itemprop="dateCreated datePublished" datetime="2021-08-30T21:55:34+08:00">2021-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-09-01 19:17:23" itemprop="dateModified" datetime="2021-09-01T19:17:23+08:00">2021-09-01</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="0-总结"><a href="#0-总结" class="headerlink" title="0 总结"></a>0 总结</h1><h1 id="1-抽取式问答简介"><a href="#1-抽取式问答简介" class="headerlink" title="1 抽取式问答简介"></a>1 抽取式问答简介</h1><p>由三部分组成：<br>    - context 内容<br>    - question 问题<br>    - answer 答案</p>
+<p>注意： answer的标注，除了给出文本之外，还给出了answer所在的位置<br>Goal： 将新的文本中，针对新的问题，给出answer所在的位置（内容）<br>简单的例子：<br><img src="question_answering.png" alt="Widget inference representing the QA task"></p>
+<h1 id="2-数据一窥"><a href="#2-数据一窥" class="headerlink" title="2 数据一窥"></a>2 数据一窥</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> datasets <span class="keyword">import</span> ClassLabel, <span class="type">Sequence</span></span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">from</span> IPython.display <span class="keyword">import</span> display, HTML</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show_random_elements</span>(<span class="params">dataset, num_examples=<span class="number">10</span></span>):</span></span><br><span class="line">    <span class="keyword">assert</span> num_examples &lt;= <span class="built_in">len</span>(dataset), <span class="string">&quot;Can&#x27;t pick more elements than there are in the dataset.&quot;</span></span><br><span class="line">    picks = []</span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(num_examples):</span><br><span class="line">        pick = random.randint(<span class="number">0</span>, <span class="built_in">len</span>(dataset)-<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">while</span> pick <span class="keyword">in</span> picks:</span><br><span class="line">            pick = random.randint(<span class="number">0</span>, <span class="built_in">len</span>(dataset)-<span class="number">1</span>)</span><br><span class="line">        picks.append(pick)</span><br><span class="line">    </span><br><span class="line">    df = pd.DataFrame(dataset[picks])</span><br><span class="line">    <span class="keyword">for</span> column, typ <span class="keyword">in</span> dataset.features.items():</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">isinstance</span>(typ, ClassLabel):</span><br><span class="line">            df[column] = df[column].transform(<span class="keyword">lambda</span> i: typ.names[i])</span><br><span class="line">        <span class="keyword">elif</span> <span class="built_in">isinstance</span>(typ, <span class="type">Sequence</span>) <span class="keyword">and</span> <span class="built_in">isinstance</span>(typ.feature, ClassLabel):</span><br><span class="line">            df[column] = df[column].transform(<span class="keyword">lambda</span> x: [typ.feature.names[i] <span class="keyword">for</span> i <span class="keyword">in</span> x])</span><br><span class="line">    display(HTML(df.to_html()))</span><br><span class="line">    <span class="comment"># 进行CSS类似的显示</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show_random_elements(datasets[<span class="string">&quot;train&quot;</span>], num_examples=<span class="number">2</span>)</span><br></pre></td></tr></table></figure>
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>answers</th>
+      <th>context</th>
+      <th>id</th>
+      <th>question</th>
+      <th>title</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>{'answer_start': [185], 'text': ['diesel fuel']}</td>
+      <td>In Alberta, five bitumen upgraders produce synthetic crude oil and a variety of other products: The Suncor Energy upgrader near Fort McMurray, Alberta produces synthetic crude oil plus diesel fuel; the Syncrude Canada, Canadian Natural Resources, and Nexen upgraders near Fort McMurray produce synthetic crude oil; and the Shell Scotford Upgrader near Edmonton produces synthetic crude oil plus an intermediate feedstock for the nearby Shell Oil Refinery. A sixth upgrader, under construction in 2015 near Redwater, Alberta, will upgrade half of its crude bitumen directly to diesel fuel, with the remainder of the output being sold as feedstock to nearby oil refineries and petrochemical plants.</td>
+      <td>571b074c9499d21900609be3</td>
+      <td>Besides crude oil, what does the Suncor Energy plant produce?</td>
+      <td>Asphalt</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>{'answer_start': [191], 'text': ['the GIOVE satellites for the Galileo system']}</td>
+      <td>Compass-M1 is an experimental satellite launched for signal testing and validation and for the frequency filing on 14 April 2007. The role of Compass-M1 for Compass is similar to the role of the GIOVE satellites for the Galileo system. The orbit of Compass-M1 is nearly circular, has an altitude of 21,150 km and an inclination of 55.5 degrees.</td>
+      <td>56e1161ccd28a01900c6757b</td>
+      <td>The purpose of the Compass-M1 satellite is similar to the purpose of what other satellite?</td>
+      <td>BeiDou_Navigation_Satellite_System</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<h1 id="2-数据预处理"><a href="#2-数据预处理" class="headerlink" title="2 数据预处理"></a>2 数据预处理</h1><p>即Tokenize</p>
+<p>为了达到数据预处理的目的，我们使用<code>AutoTokenizer.from_pretrained</code>方法实例化我们的tokenizer，这样可以确保：</p>
+<ul>
+<li>我们得到一个与预训练模型一一对应的tokenizer。</li>
+<li>使用指定的模型checkpoint对应的tokenizer的时候，我们也下载了模型需要的词表库vocabulary，准确来说是tokens vocabulary。</li>
+</ul>
+<p>这个被下载的tokens vocabulary会被缓存起来，从而再次使用的时候不会重新下载。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoTokenizer</span><br><span class="line">    </span><br><span class="line">tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)</span><br><span class="line"><span class="comment"># 以下代码要求tokenizer必须是transformers.PreTrainedTokenizerFast类型，因为我们在预处理的时候需要用到fast tokenizer的一些特殊特性（比如多线程快速tokenizer）。</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> transformers</span><br><span class="line"><span class="keyword">assert</span> <span class="built_in">isinstance</span>(tokenizer, transformers.PreTrainedTokenizerFast)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 如果我们想要看到tokenizer预处理之后的文本格式，我们仅使用tokenizer的tokenize方法，add special tokens意思是增加预训练模型所要求的特俗token。</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;单个文本tokenize: &#123;&#125;&quot;</span>.<span class="built_in">format</span>(tokenizer.tokenize(<span class="string">&quot;What is your name?&quot;</span>), add_special_tokens=<span class="literal">True</span>))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;2个文本tokenize: &#123;&#125;&quot;</span>.<span class="built_in">format</span>(tokenizer.tokenize(<span class="string">&quot;My name is Sylvain.&quot;</span>, add_special_tokens=<span class="literal">True</span>)))</span><br><span class="line"><span class="comment"># 预训练模型输入格式要求的输入为token IDs，还需要attetnion mask。可以使用下面的方法得到预训练模型格式所要求的输入。</span></span><br></pre></td></tr></table></figure>
+<pre><code>单个文本tokenize: [&#39;what&#39;, &#39;is&#39;, &#39;your&#39;, &#39;name&#39;, &#39;?&#39;]
+2个文本tokenize: [&#39;[CLS]&#39;, &#39;my&#39;, &#39;name&#39;, &#39;is&#39;, &#39;sy&#39;, &#39;##lva&#39;, &#39;##in&#39;, &#39;.&#39;, &#39;[SEP]&#39;]？？？？
+</code></pre>
+<p>tokenizer既可以对单个文本进行预处理，也可以对一对文本进行预处理，tokenizer预处理后得到的数据满足预训练模型输入格式</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 对单个文本进行预处理</span></span><br><span class="line">tokenizer(<span class="string">&quot;What is your name?&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>&#123;&#39;input_ids&#39;: [101, 2054, 2003, 2115, 2171, 1029, 102], &#39;attention_mask&#39;: [1, 1, 1, 1, 1, 1, 1]&#125;
+
+可以看出，可以看到tokenizer在开始添加了101 token  -----》[CLS]
+102 token-----&gt;[SEP]
+
+
+tokenizer(&quot;What is your name?&quot;, &quot;My name is Sylvain.&quot;)
+
+&#123;&#39;input_ids&#39;: [101, 2054, 2003, 2115, 2171, 1029, 102, 2026, 2171, 2003, 25353, 22144, 2378, 1012, 102], &#39;attention_mask&#39;: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]&#125;
+    # 对2个文本进行预处理，可以看到tokenizer在开始添加了101 token ID，中间用102token ID区分两段文本，末尾用102结尾。这些规则都是预训练模型是所设计的。
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">max_length = <span class="number">384</span> <span class="comment"># 输入feature的最大长度，question和context拼接之后</span></span><br><span class="line">doc_stride = <span class="number">128</span> <span class="comment"># 2个切片之间的重合token数量。</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/27/Task07-Transformer%E8%A7%A3%E5%86%B3%E5%BA%8F%E5%88%97%E6%A0%87%E6%B3%A8%E9%97%AE%E9%A2%98/" rel="prev" title="Task07-Transformer解决序列标注问题">
+      <i class="fa fa-chevron-left"></i> Task07-Transformer解决序列标注问题
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/09/01/Task-09%E6%9C%BA%E5%99%A8%E7%BF%BB%E8%AF%91/" rel="next" title="Task-09机器翻译">
+      Task-09机器翻译 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-%E6%80%BB%E7%BB%93"><span class="nav-number">1.</span> <span class="nav-text">0 总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%8A%BD%E5%8F%96%E5%BC%8F%E9%97%AE%E7%AD%94%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">1 抽取式问答简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%95%B0%E6%8D%AE%E4%B8%80%E7%AA%A5"><span class="nav-number">3.</span> <span class="nav-text">2 数据一窥</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86"><span class="nav-number">4.</span> <span class="nav-text">2 数据预处理</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ming Qin</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ming Qin</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

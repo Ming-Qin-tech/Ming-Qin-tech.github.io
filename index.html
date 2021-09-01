@@ -145,6 +145,232 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/09/01/Task-09%E6%9C%BA%E5%99%A8%E7%BF%BB%E8%AF%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ming Qin">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/01/Task-09%E6%9C%BA%E5%99%A8%E7%BF%BB%E8%AF%91/" class="post-title-link" itemprop="url">Task-09机器翻译</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-09-01 20:06:20 / Modified: 21:31:12" itemprop="dateCreated datePublished" datetime="2021-09-01T20:06:20+08:00">2021-09-01</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>只有微调部分</p>
+<h1 id="1-准备数据部分（笔记）"><a href="#1-准备数据部分（笔记）" class="headerlink" title="1 准备数据部分（笔记）"></a>1 准备数据部分（笔记）</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">model_checkpoint = <span class="string">&quot;Helsinki-NLP/opus-mt-en-ro&quot;</span> </span><br><span class="line"><span class="comment"># 选择一个模型checkpoint</span></span><br></pre></td></tr></table></figure>
+
+<p>值得注意：<br>如何对预测结果进行评分？<br>我们使用compute方法来对比predictions和labels，从而计算得分。predictions和labels都需要是一个list。具体格式见下面的例子：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">fake_preds = [<span class="string">&quot;hello there&quot;</span>, <span class="string">&quot;general kenobi&quot;</span>]</span><br><span class="line">fake_labels = [[<span class="string">&quot;hello there&quot;</span>], [<span class="string">&quot;general kenobi&quot;</span>]]</span><br><span class="line">metric.compute(predictions=fake_preds, references=fake_labels)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<pre><code>&#123;&#39;bp&#39;: 1.0,
+ &#39;counts&#39;: [4, 2, 0, 0],
+ &#39;precisions&#39;: [100.0, 100.0, 0.0, 0.0],
+ &#39;ref_len&#39;: 4,
+ &#39;score&#39;: 0.0,
+ &#39;sys_len&#39;: 4,
+ &#39;totals&#39;: [4, 2, 0, 0]&#125;
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoTokenizer</span><br><span class="line"><span class="comment"># 需要安装`sentencepiece`： pip install sentencepiece</span></span><br><span class="line">    </span><br><span class="line">tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)</span><br><span class="line">````</span><br><span class="line"></span><br><span class="line">如果您使用的是T5预训练模型的checkpoints，需要对特殊的前缀进行检查。T5使用特殊的前缀来告诉模型具体要做的任务</span><br><span class="line"></span><br><span class="line">truncation=<span class="literal">True</span>这个参数来确保我们超长的句子被截断。默认情况下，对与比较短的句子我们会自动padding。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">制定处理函数，然后将数据处理函数应用到所有的数据中去(<span class="built_in">map</span>函数)</span><br><span class="line"></span><br><span class="line">```python</span><br><span class="line">tokenized_datasets = raw_datasets.<span class="built_in">map</span>(preprocess_function, batched=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+<p>batched = True方便之后并行处理数据<br>注意自动缓存，若有改动记得清理。</p>
+<h1 id="2-微调部分笔记"><a href="#2-微调部分笔记" class="headerlink" title="2 微调部分笔记"></a>2 微调部分笔记</h1><p>得到word的embedding需要预训练模型（调用from_pretrained方法），但是同时，在微调时，from_pretrained方法也用于下载训练好的模型以便于进一步加载。但是前者是AutoTokenizer类，后者是AutoModelForSeq2SeqLM这个类。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer</span><br><span class="line"></span><br><span class="line">model = AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">batch_size = <span class="number">16</span></span><br><span class="line">args = Seq2SeqTrainingArguments(</span><br><span class="line">    <span class="string">&quot;test-translation&quot;</span>,</span><br><span class="line">    evaluation_strategy = <span class="string">&quot;epoch&quot;</span>,</span><br><span class="line">    learning_rate=<span class="number">2e-5</span>,</span><br><span class="line">    per_device_train_batch_size=batch_size,</span><br><span class="line">    per_device_eval_batch_size=batch_size,</span><br><span class="line">    weight_decay=<span class="number">0.01</span>,</span><br><span class="line">    save_total_limit=<span class="number">3</span>,</span><br><span class="line">    <span class="comment"># 由于模型比较大，而服务器内存有限，所以我们只保存最多3个模型。</span></span><br><span class="line">    num_train_epochs=<span class="number">1</span>,</span><br><span class="line">    predict_with_generate=<span class="literal">True</span>,</span><br><span class="line">    fp16=<span class="literal">False</span>,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+
+<p>最后我们需要一个数据收集器data collator，将我们处理好的输入喂给模型。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)</span><br></pre></td></tr></table></figure>
+
+<p>设置好<code>Seq2SeqTrainer</code>还剩最后一件事情，那就是我们需要定义好评估方法。我们使用<code>metric</code>来完成评估。将模型预测送入评估之前，我们也会做一些数据后处理：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">postprocess_text</span>(<span class="params">preds, labels</span>):</span></span><br><span class="line">    preds = [pred.strip() <span class="keyword">for</span> pred <span class="keyword">in</span> preds]</span><br><span class="line">    labels = [[label.strip()] <span class="keyword">for</span> label <span class="keyword">in</span> labels]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> preds, labels</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">compute_metrics</span>(<span class="params">eval_preds</span>):</span></span><br><span class="line">    preds, labels = eval_preds</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">isinstance</span>(preds, <span class="built_in">tuple</span>):</span><br><span class="line">        preds = preds[<span class="number">0</span>]</span><br><span class="line">    decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Replace -100 in the labels as we can&#x27;t decode them.</span></span><br><span class="line">    labels = np.where(labels != -<span class="number">100</span>, labels, tokenizer.pad_token_id)</span><br><span class="line">    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Some simple post-processing</span></span><br><span class="line">    decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)</span><br><span class="line"></span><br><span class="line">    result = metric.compute(predictions=decoded_preds, references=decoded_labels)</span><br><span class="line">    result = &#123;<span class="string">&quot;bleu&quot;</span>: result[<span class="string">&quot;score&quot;</span>]&#125;</span><br><span class="line"></span><br><span class="line">    prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) <span class="keyword">for</span> pred <span class="keyword">in</span> preds]</span><br><span class="line">    result[<span class="string">&quot;gen_len&quot;</span>] = np.mean(prediction_lens)</span><br><span class="line">    result = &#123;k: <span class="built_in">round</span>(v, <span class="number">4</span>) <span class="keyword">for</span> k, v <span class="keyword">in</span> result.items()&#125;</span><br><span class="line">    <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure>
+
+<p>最后将所有的参数/数据/模型传给<code>Seq2SeqTrainer</code>即可</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">trainer = Seq2SeqTrainer(</span><br><span class="line">    model,</span><br><span class="line">    args,</span><br><span class="line">    train_dataset=tokenized_datasets[<span class="string">&quot;train&quot;</span>],</span><br><span class="line">    eval_dataset=tokenized_datasets[<span class="string">&quot;validation&quot;</span>],</span><br><span class="line">    data_collator=data_collator,</span><br><span class="line">    tokenizer=tokenizer,</span><br><span class="line">    compute_metrics=compute_metrics</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>调用<code>train</code>方法进行微调训练。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">trainer.train()</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/08/30/Task08-%E9%97%AE%E7%AD%94%E4%BB%BB%E5%8A%A1-%E6%8A%BD%E5%8F%96%E5%BC%8F%E9%97%AE%E7%AD%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ming Qin">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/30/Task08-%E9%97%AE%E7%AD%94%E4%BB%BB%E5%8A%A1-%E6%8A%BD%E5%8F%96%E5%BC%8F%E9%97%AE%E7%AD%94/" class="post-title-link" itemprop="url">Task08-问答任务-抽取式问答</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-08-30 21:55:34" itemprop="dateCreated datePublished" datetime="2021-08-30T21:55:34+08:00">2021-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-09-01 19:17:23" itemprop="dateModified" datetime="2021-09-01T19:17:23+08:00">2021-09-01</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="0-总结"><a href="#0-总结" class="headerlink" title="0 总结"></a>0 总结</h1><h1 id="1-抽取式问答简介"><a href="#1-抽取式问答简介" class="headerlink" title="1 抽取式问答简介"></a>1 抽取式问答简介</h1><p>由三部分组成：<br>    - context 内容<br>    - question 问题<br>    - answer 答案</p>
+<p>注意： answer的标注，除了给出文本之外，还给出了answer所在的位置<br>Goal： 将新的文本中，针对新的问题，给出answer所在的位置（内容）<br>简单的例子：<br><img src="question_answering.png" alt="Widget inference representing the QA task"></p>
+<h1 id="2-数据一窥"><a href="#2-数据一窥" class="headerlink" title="2 数据一窥"></a>2 数据一窥</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> datasets <span class="keyword">import</span> ClassLabel, <span class="type">Sequence</span></span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">from</span> IPython.display <span class="keyword">import</span> display, HTML</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show_random_elements</span>(<span class="params">dataset, num_examples=<span class="number">10</span></span>):</span></span><br><span class="line">    <span class="keyword">assert</span> num_examples &lt;= <span class="built_in">len</span>(dataset), <span class="string">&quot;Can&#x27;t pick more elements than there are in the dataset.&quot;</span></span><br><span class="line">    picks = []</span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(num_examples):</span><br><span class="line">        pick = random.randint(<span class="number">0</span>, <span class="built_in">len</span>(dataset)-<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">while</span> pick <span class="keyword">in</span> picks:</span><br><span class="line">            pick = random.randint(<span class="number">0</span>, <span class="built_in">len</span>(dataset)-<span class="number">1</span>)</span><br><span class="line">        picks.append(pick)</span><br><span class="line">    </span><br><span class="line">    df = pd.DataFrame(dataset[picks])</span><br><span class="line">    <span class="keyword">for</span> column, typ <span class="keyword">in</span> dataset.features.items():</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">isinstance</span>(typ, ClassLabel):</span><br><span class="line">            df[column] = df[column].transform(<span class="keyword">lambda</span> i: typ.names[i])</span><br><span class="line">        <span class="keyword">elif</span> <span class="built_in">isinstance</span>(typ, <span class="type">Sequence</span>) <span class="keyword">and</span> <span class="built_in">isinstance</span>(typ.feature, ClassLabel):</span><br><span class="line">            df[column] = df[column].transform(<span class="keyword">lambda</span> x: [typ.feature.names[i] <span class="keyword">for</span> i <span class="keyword">in</span> x])</span><br><span class="line">    display(HTML(df.to_html()))</span><br><span class="line">    <span class="comment"># 进行CSS类似的显示</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show_random_elements(datasets[<span class="string">&quot;train&quot;</span>], num_examples=<span class="number">2</span>)</span><br></pre></td></tr></table></figure>
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>answers</th>
+      <th>context</th>
+      <th>id</th>
+      <th>question</th>
+      <th>title</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>{'answer_start': [185], 'text': ['diesel fuel']}</td>
+      <td>In Alberta, five bitumen upgraders produce synthetic crude oil and a variety of other products: The Suncor Energy upgrader near Fort McMurray, Alberta produces synthetic crude oil plus diesel fuel; the Syncrude Canada, Canadian Natural Resources, and Nexen upgraders near Fort McMurray produce synthetic crude oil; and the Shell Scotford Upgrader near Edmonton produces synthetic crude oil plus an intermediate feedstock for the nearby Shell Oil Refinery. A sixth upgrader, under construction in 2015 near Redwater, Alberta, will upgrade half of its crude bitumen directly to diesel fuel, with the remainder of the output being sold as feedstock to nearby oil refineries and petrochemical plants.</td>
+      <td>571b074c9499d21900609be3</td>
+      <td>Besides crude oil, what does the Suncor Energy plant produce?</td>
+      <td>Asphalt</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>{'answer_start': [191], 'text': ['the GIOVE satellites for the Galileo system']}</td>
+      <td>Compass-M1 is an experimental satellite launched for signal testing and validation and for the frequency filing on 14 April 2007. The role of Compass-M1 for Compass is similar to the role of the GIOVE satellites for the Galileo system. The orbit of Compass-M1 is nearly circular, has an altitude of 21,150 km and an inclination of 55.5 degrees.</td>
+      <td>56e1161ccd28a01900c6757b</td>
+      <td>The purpose of the Compass-M1 satellite is similar to the purpose of what other satellite?</td>
+      <td>BeiDou_Navigation_Satellite_System</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<h1 id="2-数据预处理"><a href="#2-数据预处理" class="headerlink" title="2 数据预处理"></a>2 数据预处理</h1><p>即Tokenize</p>
+<p>为了达到数据预处理的目的，我们使用<code>AutoTokenizer.from_pretrained</code>方法实例化我们的tokenizer，这样可以确保：</p>
+<ul>
+<li>我们得到一个与预训练模型一一对应的tokenizer。</li>
+<li>使用指定的模型checkpoint对应的tokenizer的时候，我们也下载了模型需要的词表库vocabulary，准确来说是tokens vocabulary。</li>
+</ul>
+<p>这个被下载的tokens vocabulary会被缓存起来，从而再次使用的时候不会重新下载。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoTokenizer</span><br><span class="line">    </span><br><span class="line">tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)</span><br><span class="line"><span class="comment"># 以下代码要求tokenizer必须是transformers.PreTrainedTokenizerFast类型，因为我们在预处理的时候需要用到fast tokenizer的一些特殊特性（比如多线程快速tokenizer）。</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> transformers</span><br><span class="line"><span class="keyword">assert</span> <span class="built_in">isinstance</span>(tokenizer, transformers.PreTrainedTokenizerFast)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 如果我们想要看到tokenizer预处理之后的文本格式，我们仅使用tokenizer的tokenize方法，add special tokens意思是增加预训练模型所要求的特俗token。</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;单个文本tokenize: &#123;&#125;&quot;</span>.<span class="built_in">format</span>(tokenizer.tokenize(<span class="string">&quot;What is your name?&quot;</span>), add_special_tokens=<span class="literal">True</span>))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;2个文本tokenize: &#123;&#125;&quot;</span>.<span class="built_in">format</span>(tokenizer.tokenize(<span class="string">&quot;My name is Sylvain.&quot;</span>, add_special_tokens=<span class="literal">True</span>)))</span><br><span class="line"><span class="comment"># 预训练模型输入格式要求的输入为token IDs，还需要attetnion mask。可以使用下面的方法得到预训练模型格式所要求的输入。</span></span><br></pre></td></tr></table></figure>
+<pre><code>单个文本tokenize: [&#39;what&#39;, &#39;is&#39;, &#39;your&#39;, &#39;name&#39;, &#39;?&#39;]
+2个文本tokenize: [&#39;[CLS]&#39;, &#39;my&#39;, &#39;name&#39;, &#39;is&#39;, &#39;sy&#39;, &#39;##lva&#39;, &#39;##in&#39;, &#39;.&#39;, &#39;[SEP]&#39;]？？？？
+</code></pre>
+<p>tokenizer既可以对单个文本进行预处理，也可以对一对文本进行预处理，tokenizer预处理后得到的数据满足预训练模型输入格式</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 对单个文本进行预处理</span></span><br><span class="line">tokenizer(<span class="string">&quot;What is your name?&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>&#123;&#39;input_ids&#39;: [101, 2054, 2003, 2115, 2171, 1029, 102], &#39;attention_mask&#39;: [1, 1, 1, 1, 1, 1, 1]&#125;
+
+可以看出，可以看到tokenizer在开始添加了101 token  -----》[CLS]
+102 token-----&gt;[SEP]
+
+
+tokenizer(&quot;What is your name?&quot;, &quot;My name is Sylvain.&quot;)
+
+&#123;&#39;input_ids&#39;: [101, 2054, 2003, 2115, 2171, 1029, 102, 2026, 2171, 2003, 25353, 22144, 2378, 1012, 102], &#39;attention_mask&#39;: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]&#125;
+    # 对2个文本进行预处理，可以看到tokenizer在开始添加了101 token ID，中间用102token ID区分两段文本，末尾用102结尾。这些规则都是预训练模型是所设计的。
+</code></pre>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">max_length = <span class="number">384</span> <span class="comment"># 输入feature的最大长度，question和context拼接之后</span></span><br><span class="line">doc_stride = <span class="number">128</span> <span class="comment"># 2个切片之间的重合token数量。</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/08/27/Task07-Transformer%E8%A7%A3%E5%86%B3%E5%BA%8F%E5%88%97%E6%A0%87%E6%B3%A8%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1907,158 +2133,6 @@ Examples:
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/24/hexo%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ming Qin">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/24/hexo%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/" class="post-title-link" itemprop="url">hexo调试日志</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2021-03-24 22:49:42 / Modified: 22:53:04" itemprop="dateCreated datePublished" datetime="2021-03-24T22:49:42+08:00">2021-03-24</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <ol>
-<li>hexo d出错 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Error: Spawn failed at ChildProcess.&lt;anonymous&gt; (E:\blog\node_modules\hexo-</span><br><span class="line">util\lib\spawn.js:51:21) at ChildProcess.emit (events.js:210:5) at ChildProcess.cp.emit (E:\blog\node_modules\cross-</span><br><span class="line">spawn\lib\enoent.js:34:29) at Process.ChildProcess._handle.onexit (internal&#x2F;child_process.js:272:12)</span><br></pre></td></tr></table></figure>
-<ul>
-<li>解决办法：</li>
-</ul>
-<ol>
-<li>删除.deploy_git文件</li>
-<li>依次执行<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dexo clean</span><br><span class="line">dexo g</span><br><span class="line">dexo d</span><br></pre></td></tr></table></figure></li>
-</ol>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/24/python%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ming Qin">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/24/python%E8%B0%83%E8%AF%95%E6%97%A5%E5%BF%97/" class="post-title-link" itemprop="url">调试日志</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2021-03-24 21:40:42 / Modified: 22:50:12" itemprop="dateCreated datePublished" datetime="2021-03-24T21:40:42+08:00">2021-03-24</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <hr>
-<ol>
-<li><p>如果函数def中没有return，只有print，如果再在引用时使用print，那么最后会有none输出。</p>
-</li>
-<li><p>print不换行加  end=“”</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">print(&quot;....&quot;, end&#x3D;&quot;&quot;)</span><br></pre></td></tr></table></figure></li>
-<li><p>计算字符串中各字母出现的次数：</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">def get_frequency_dict(sequence):</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line">    Returns a dictionary where the keys are elements of the sequence</span><br><span class="line">    and the values are integer counts, for the number of times that</span><br><span class="line">    an element is repeated in the sequence.</span><br><span class="line"></span><br><span class="line">    sequence: string or list</span><br><span class="line">    return: dictionary</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line">    </span><br><span class="line">    # freqs: dictionary (element_type -&gt; int)</span><br><span class="line">    freq &#x3D; &#123;&#125;</span><br><span class="line">    for x in sequence:</span><br><span class="line">        freq[x] &#x3D; freq.get(x,0) + 1</span><br><span class="line">    return freq</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>dict.get(‘a’,0) and dict[‘a’]</strong>:usual way to access a value is hand[‘a’], where ‘a’<br>​is the key we want to find. However,this only works if the key is in the dictionary; otherwise, we get a KeyError ​. To avoid this, we can instead use the function call hand.get(‘a’,0)</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">get(key, [default])</span><br><span class="line">Return the value for key if key is in the dictionary, else default. If default is not given, it defaults to None, so that this method never raises a KeyError.</span><br></pre></td></tr></table></figure></li>
-<li><p>大小写转换</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">str &#x3D; &quot;www.runoob.com&quot;</span><br><span class="line">print(str.upper())          # 把所有字符中的小写字母转换成大写字母</span><br><span class="line">print(str.lower())          # 把所有字符中的大写字母转换成小写字母</span><br></pre></td></tr></table></figure></li>
-<li><p>在字典遍历过程中修改字典元素，报错  <strong>得知遍历时不能修改字典元素</strong></p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">for k in func_dict.keys():</span><br><span class="line">    if func_dict[k] is np.nan:</span><br><span class="line">        del func_dict[k]</span><br><span class="line">        continue</span><br><span class="line">RuntimeError: dictionary changed size during iteration</span><br></pre></td></tr></table></figure>
-<p> <strong>解决办法：将遍历条件改为列表</strong></p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">for k in list(func_dict.keys()):</span><br><span class="line">if func_dict[k] is np.nan:</span><br><span class="line">    del func_dict[k]</span><br><span class="line">    continue</span><br></pre></td></tr></table></figure></li>
-<li><p>dict.copy()才是复制，而等于只是引用而已,字符串复制直接可以用等号</p>
-</li>
-<li><p>How can I add new keys to a dictionary?</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">d &#x3D; &#123;&#39;key&#39;: &#39;value&#39;&#125;</span><br><span class="line">print(d)  # &#123;&#39;key&#39;: &#39;value&#39;&#125;</span><br><span class="line"></span><br><span class="line">d[&#39;mynewkey&#39;] &#x3D; &#39;mynewvalue&#39;</span><br><span class="line"></span><br><span class="line">print(d)  # &#123;&#39;key&#39;: &#39;value&#39;, &#39;mynewkey&#39;: &#39;mynewvalue&#39;&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p>input() can only has one parameter</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nilai_tinggi &#x3D; int(input(&quot;Enter the height of children number &quot;, str(A)))</span><br><span class="line">TypeError: raw_input() takes from 1 to 2 positional arguments but 3 were given</span><br></pre></td></tr></table></figure>
-<p> 解决方法：</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nilai_tinggi &#x3D; int(input(&quot;Enter the height of children number %d&quot; %A))</span><br></pre></td></tr></table></figure></li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -2128,7 +2202,7 @@ Examples:
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
